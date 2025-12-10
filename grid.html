@@ -300,6 +300,7 @@
         
         // Load companion rules
         let companionRules = {};
+        let plantData = {}; // Store full plant data including compatible list
         
         // Plant data fallback (in case JSON doesn't load)
         const plantDataFallback = {
@@ -442,8 +443,6 @@
             }
             return null;
         }
-        
-        let plantData = {}; // Store full plant data including compatible list
         
         function checkCompatibility(plant1, plant2) {
             if (!plant1 || !plant2) return {compatible: true, beneficial: false}; // Empty is always compatible
