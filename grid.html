@@ -291,6 +291,31 @@
         // Load companion rules
         let companionRules = {};
         
+        // Plant data fallback (in case JSON doesn't load)
+        const plantDataFallback = {
+            "1": "Tomato", "2": "Pepper", "3": "Bean", "4": "Pea", "5": "Cabbage",
+            "6": "Carrot", "7": "Onion", "8": "Potato", "9": "Corn", "10": "Squash",
+            "11": "Cucumber", "12": "Lettuce", "13": "Radish", "14": "Spinach", "15": "Kale",
+            "16": "Beet", "17": "Garlic", "18": "Basil", "19": "Marigold", "20": "Nasturtium",
+            "21": "Lentil", "22": "Chickpea", "23": "Fava Bean", "24": "Black Bean", "25": "Kidney Bean",
+            "26": "Navy Bean", "27": "Lima Bean", "28": "Soybean", "29": "Wheat", "30": "Oats",
+            "31": "Barley", "32": "Quinoa", "33": "Amaranth", "34": "Buckwheat", "35": "Millet",
+            "36": "Rye", "37": "Sweet Potato", "38": "Turnip", "39": "Parsnip", "40": "Leek",
+            "41": "Chard", "42": "Arugula", "43": "Mizuna", "44": "Broccoli", "45": "Cauliflower",
+            "46": "Brussels Sprouts", "47": "Sunflower", "48": "Flax", "49": "Hemp", "50": "Asparagus",
+            "51": "Rhubarb", "52": "Artichoke", "53": "Sorrel", "54": "Lovage", "55": "Chive",
+            "56": "Walking Onion", "57": "Sea Kale", "58": "Oregano", "59": "Thyme", "60": "Rosemary",
+            "61": "Sage", "62": "Mint", "63": "Parsley", "64": "Dill", "65": "Coriander",
+            "66": "Fennel", "67": "Marjoram", "68": "Tarragon", "69": "Apple", "70": "Pear",
+            "71": "Plum", "72": "Cherry", "73": "Apricot", "74": "Quince", "75": "Raspberry",
+            "76": "Blackberry", "77": "Red Currant", "78": "Black Currant", "79": "Gooseberry", "80": "Elderberry",
+            "81": "Sea Buckthorn", "82": "Jostaberry", "83": "Aronia", "84": "Walnut", "85": "Hazelnut",
+            "86": "Almond", "87": "Chestnut", "88": "Black Locust", "89": "Elder", "90": "Siberian Pea Shrub",
+            "91": "Goumi", "92": "Autumn Olive", "93": "Serviceberry", "94": "White Clover", "95": "Red Clover",
+            "96": "Vetch", "97": "Alfalfa", "98": "Lupine", "99": "Field Pea", "100": "Fenugreek",
+            "101": "Tansy", "102": "Comfrey", "103": "Yarrow", "104": "Chamomile"
+        };
+        
         async function loadCompanionRules() {
             try {
                 const response = await fetch('companion_rules.json');
@@ -307,8 +332,29 @@
                 });
             } catch (error) {
                 console.error('Error loading companion rules:', error);
-                // Fallback: create basic structure
-                companionRules = {};
+                // Fallback: use hardcoded plant data
+                companionRules = {
+                    "Tomato": ["Potato", "Fennel", "Corn"],
+                    "Potato": ["Tomato", "Squash", "Cucumber"],
+                    "Bean": ["Onion", "Garlic", "Fennel"],
+                    "Pea": ["Onion", "Garlic"],
+                    "Onion": ["Bean", "Pea"],
+                    "Garlic": ["Bean", "Pea"],
+                    "Carrot": ["Dill", "Fennel"],
+                    "Cabbage": ["Strawberry", "Tomato"],
+                    "Corn": ["Tomato"],
+                    "Squash": ["Potato"],
+                    "Cucumber": ["Potato"]
+                };
+                
+                // Populate plant select with fallback data
+                const select = document.getElementById('plantSelect');
+                Object.entries(plantDataFallback).forEach(([num, name]) => {
+                    const option = document.createElement('option');
+                    option.value = num;
+                    option.textContent = `${num}. ${name}`;
+                    select.appendChild(option);
+                });
             }
         }
         
