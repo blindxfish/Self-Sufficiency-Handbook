@@ -223,6 +223,7 @@
 <li><strong>Section 10:</strong> Recipes (how to use what you grow)</li>
 <li><strong>Section 11:</strong> Yearly cycle (month-by-month checklist)</li>
 <li><strong>Section 12:</strong> Emergency mode (low-input survival)</li>
+<li><strong>Section 13:</strong> Planting grid (spatial planning tool)</li>
 </ul>
 <h2 id="how-to-read">How to Read</h2>
 <h3 id="quick-reference">Quick Reference</h3>
@@ -265,6 +266,10 @@
 <p><strong>Emergency situations:</strong></p>
 <ul>
 <li>Read Section 12 (low-input mode)</li>
+</ul>
+<p><strong>Planning plant placement:</strong></p>
+<ul>
+<li>Read Section 13 (planting grid)</li>
 </ul>
 <h2 id="format-conventions">Format Conventions</h2>
 <ul>
@@ -4883,6 +4888,238 @@
 <li>Compost everything</li>
 <li>Save all seeds</li>
 <li>Build soil naturally</li>
+</ul>
+<hr>
+<h1 id="section-13-planting-grid-spatial-planning">SECTION 13 — PLANTING GRID &amp; SPATIAL PLANNING</h1>
+<h2 id="goal-13">Goal</h2>
+<p>Prevent incompatible plant placements. Find valid spots for new plantings without creating bad neighbor conflicts.</p>
+<h2 id="13-1-grid-system-overview">13.1 Grid System Overview</h2>
+<h3 id="grid-specifications">Grid Specifications</h3>
+<ul>
+<li><strong>Dimensions:</strong> 100 columns × 30 rows = 3000 cells</li>
+<li><strong>Cell size:</strong> Each cell = 1 m²</li>
+<li><strong>Total area:</strong> 3000 m² (matches handbook's 2500-3000 m² range)</li>
+<li><strong>Adjacency:</strong> 8-directional (orthogonal + diagonal neighbors)</li>
+<li><strong>Format:</strong> Numbers represent plants (see plant numbering reference)</li>
+</ul>
+<h3 id="why-use-the-grid">Why Use the Grid</h3>
+<ul>
+<li><strong>Prevent conflicts:</strong> Avoid placing incompatible plants adjacent</li>
+<li><strong>Quick planning:</strong> Find valid spots for new plantings mid-season</li>
+<li><strong>Visual layout:</strong> See entire garden space at once</li>
+<li><strong>Succession planning:</strong> Plan multi-season plantings in same cells</li>
+</ul>
+<h2 id="13-2-plant-numbering-system">13.2 Plant Numbering System</h2>
+<p>Each plant has been assigned a number. Use these numbers in grid cells.</p>
+<p><strong>Key plants:</strong></p>
+<ul>
+<li>1. Tomato</li>
+<li>2. Pepper</li>
+<li>3. Bean</li>
+<li>4. Pea</li>
+<li>5. Cabbage</li>
+<li>6. Carrot</li>
+<li>7. Onion</li>
+<li>8. Potato</li>
+<li>9. Corn</li>
+<li>10. Squash</li>
+<li>11. Cucumber</li>
+<li>12. Lettuce</li>
+<li>13. Radish</li>
+<li>14. Spinach</li>
+<li>15. Kale</li>
+<li>16. Beet</li>
+<li>17. Garlic</li>
+<li>18. Basil</li>
+<li>19. Marigold</li>
+<li>20. Nasturtium</li>
+</ul>
+<p><strong>See <code>plant_numbers.md</code> for complete list of all 104 plants.</strong></p>
+<h2 id="13-3-multi-season-notation">13.3 Multi-Season Notation</h2>
+<p>Use semicolon to indicate succession planting in same cell:</p>
+<ul>
+<li><code>1;5</code> = Plant 1 (Tomato) in first season, then Plant 5 (Cabbage) in second season</li>
+<li><code>21;29</code> = Plant 21 (Lentil) in spring, then Plant 29 (Wheat) in fall</li>
+<li><code>4;12</code> = Plant 4 (Pea) in spring, then Plant 12 (Lettuce) in fall</li>
+</ul>
+<p><strong>Order matters:</strong> First number = first season, second number = second season.</p>
+<h2 id="13-4-adjacency-rules">13.4 Adjacency Rules</h2>
+<h3 id="8-directional-adjacency">8-Directional Adjacency</h3>
+<p>Each cell checks 8 neighboring cells:</p>
+<ul>
+<li>Up, Down, Left, Right (orthogonal)</li>
+<li>Top-left, Top-right, Bottom-left, Bottom-right (diagonal)</li>
+</ul>
+<h3 id="validation-logic">Validation Logic</h3>
+<p><strong>Cannot place plant if:</strong></p>
+<ul>
+<li>Any adjacent cell contains an incompatible plant (see companion rules)</li>
+</ul>
+<p><strong>Can place plant if:</strong></p>
+<ul>
+<li>Cell is empty</li>
+<li>All adjacent cells are empty OR contain compatible plants</li>
+</ul>
+<p><strong>Example:</strong></p>
+<ul>
+<li>Cell has Tomato (1) → Cannot place Potato (8) in adjacent cells</li>
+<li>Cell has Bean (3) → Cannot place Onion (7) or Garlic (17) in adjacent cells</li>
+<li>Cell has Carrot (6) → Cannot place Dill (64) or Fennel (66) in adjacent cells</li>
+</ul>
+<h2 id="13-5-space-requirements">13.5 Space Requirements</h2>
+<h3 id="calculating-cells-needed">Calculating Cells Needed</h3>
+<p><strong>From Section 1 (Seed amounts) and Section 5 (Yields):</strong></p>
+<ol>
+<li><strong>Determine total m² needed:</strong>
+<ul>
+<li>Seed amount per year (Section 1)</li>
+<li>Expected yield per m² (Section 5)</li>
+<li>Calculate: Total m² = (Annual need / Yield per m²)</li>
+</ul>
+</li>
+<li><strong>Account for spacing:</strong>
+<ul>
+<li>Row spacing × plant spacing = area per plant</li>
+<li>Plants per m² = 1 m² / area per plant</li>
+<li>Adjust for actual planting density</li>
+</ul>
+</li>
+<li><strong>Plant type considerations:</strong>
+<ul>
+<li><strong>Trees:</strong> 4-16 m² (2×2 to 4×4 cells) - leave buffer cells</li>
+<li><strong>Shrubs:</strong> 1-4 m² (1×1 to 2×2 cells)</li>
+<li><strong>Large vegetables:</strong> 0.5-1 m² per plant</li>
+<li><strong>Small vegetables/herbs:</strong> Multiple plants per m²</li>
+</ul>
+</li>
+</ol>
+<h3 id="example-calculations">Example Calculations</h3>
+<p><strong>Potato:</strong></p>
+<ul>
+<li>Seed: 15 kg seed potatoes</li>
+<li>Spacing: 30 cm × 75 cm = 0.225 m² per plant</li>
+<li>Yield: 3-5 kg per m²</li>
+<li>Need: ~100-150 m² (100-150 cells)</li>
+</ul>
+<p><strong>Tomato:</strong></p>
+<ul>
+<li>Seed: 5 g</li>
+<li>Spacing: 60-90 cm × 90 cm = ~0.5-0.8 m² per plant</li>
+<li>Yield: 5-10 kg per m²</li>
+<li>Need: ~20-40 m² (20-40 cells)</li>
+</ul>
+<p><strong>Wheat:</strong></p>
+<ul>
+<li>Seed: 2.5 kg</li>
+<li>Spacing: Broadcast or rows 15-20 cm apart</li>
+<li>Yield: 500-800 g per m²</li>
+<li>Need: ~300-500 m² (300-500 cells)</li>
+</ul>
+<h2 id="13-6-using-the-grid">13.6 Using the Grid</h2>
+<h3 id="interactive-tool-gridhtml">Interactive Tool (grid.html)</h3>
+<ol>
+<li><strong>Open <code>grid.html</code> in web browser</strong></li>
+<li><strong>Select plant</strong> from dropdown</li>
+<li><strong>Choose mode:</strong>
+<ul>
+<li><strong>Place Plant:</strong> Click cell to place selected plant</li>
+<li><strong>Check Valid Spots:</strong> Highlights all valid placement locations</li>
+<li><strong>Remove Plant:</strong> Click cell to remove plant</li>
+</ul>
+</li>
+<li><strong>Visual feedback:</strong>
+<ul>
+<li>Green = Valid placement</li>
+<li>Red = Invalid (conflict with adjacent)</li>
+<li>Blue = Has plant</li>
+<li>Gray = Empty</li>
+</ul>
+</li>
+</ol>
+<h3 id="csv-template-grid_templatecsv">CSV Template (grid_template.csv)</h3>
+<ol>
+<li><strong>Open <code>grid_template.csv</code> in spreadsheet</strong></li>
+<li><strong>Enter plant numbers</strong> in cells</li>
+<li><strong>Use semicolon</strong> for multi-season (e.g., "1;5")</li>
+<li><strong>Leave empty</strong> for paths, buffers, unused space</li>
+<li><strong>Validate manually</strong> using companion rules</li>
+</ol>
+<h3 id="validation-checklist">Validation Checklist</h3>
+<p>Before placing a plant, check:</p>
+<ul>
+<li>[ ] Cell is empty (or planning succession)</li>
+<li>[ ] No incompatible plants in 8 adjacent cells</li>
+<li>[ ] Enough space for plant's requirements</li>
+<li>[ ] Compatible with plants in adjacent cells</li>
+</ul>
+<h2 id="13-7-common-incompatible-pairs">13.7 Common Incompatible Pairs</h2>
+<p><strong>Critical conflicts to avoid:</strong></p>
+<ul>
+<li>Tomato ↔ Potato, Fennel, Corn</li>
+<li>Bean/Pea ↔ Onion, Garlic</li>
+<li>Potato ↔ Tomato, Squash, Cucumber</li>
+<li>Carrot ↔ Dill, Fennel</li>
+<li>Cabbage ↔ Tomato, Strawberry</li>
+<li>Corn ↔ Tomato</li>
+<li>Squash ↔ Potato</li>
+<li>Cucumber ↔ Potato</li>
+</ul>
+<p><strong>See Section 4.6 Companion Planting Matrix for complete list.</strong></p>
+<h2 id="13-8-grid-layout-tips">13.8 Grid Layout Tips</h2>
+<h3 id="zoning">Zoning</h3>
+<ul>
+<li><strong>North edge:</strong> Trees (permanent, large cells)</li>
+<li><strong>Mid-perimeter:</strong> Shrubs (permanent, medium cells)</li>
+<li><strong>Central area:</strong> Annuals (rotating, flexible)</li>
+</ul>
+<h3 id="paths-and-buffers">Paths and Buffers</h3>
+<ul>
+<li>Leave empty cells for paths (0.5-1 m wide = 1-2 cells)</li>
+<li>Leave buffer cells between incompatible zones</li>
+<li>Use empty cells to separate conflicting plant groups</li>
+</ul>
+<h3 id="succession-planning">Succession Planning</h3>
+<ul>
+<li>Plan spring → fall successions in same cells</li>
+<li>Use semicolon notation: <code>4;12</code> (Pea then Lettuce)</li>
+<li>Check both seasons for compatibility</li>
+</ul>
+<h3 id="example-layout-pattern">Example Layout Pattern</h3>
+<pre><code>Row 1:  [Tree] [Empty] [Tree] [Empty] [Tree] ...
+Row 2:  [Empty] [Shrub] [Empty] [Shrub] [Empty] ...
+Row 3:  [1] [18] [1] [18] [1] ... (Tomato, Basil)
+Row 4:  [6] [7] [6] [7] [6] ... (Carrot, Onion)
+</code></pre>
+<h2 id="13-9-files-and-resources">13.9 Files and Resources</h2>
+<ul>
+<li><strong>grid.html</strong> - Interactive visual grid tool</li>
+<li><strong>grid_template.csv</strong> - Empty grid template (100×30)</li>
+<li><strong>companion_rules.json</strong> - Complete companion planting rules</li>
+<li><strong>plant_numbers.md</strong> - Full plant numbering reference</li>
+</ul>
+<h2 id="13-10-quick-reference">13.10 Quick Reference</h2>
+<p><strong>To find valid spot for new plant:</strong></p>
+<ol>
+<li>Open grid.html</li>
+<li>Select plant number</li>
+<li>Choose "Check Valid Spots" mode</li>
+<li>Green cells = safe to plant</li>
+<li>Red cells = conflicts with adjacent plants</li>
+</ol>
+<p><strong>To plan succession:</strong></p>
+<ol>
+<li>Identify empty cells after harvest</li>
+<li>Check what was planted there (if any)</li>
+<li>Select new plant for next season</li>
+<li>Use semicolon notation: <code>old;new</code></li>
+<li>Validate both plants are compatible with neighbors</li>
+</ol>
+<p><strong>To avoid conflicts:</strong></p>
+<ul>
+<li>Always check 8 adjacent cells before placing</li>
+<li>Refer to companion_rules.json for incompatibilities</li>
+<li>Leave buffer cells between incompatible zones</li>
+<li>Use empty cells strategically</li>
 </ul>
 <hr>
 <p><strong>END OF HANDBOOK</strong></p>

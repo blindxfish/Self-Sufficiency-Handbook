@@ -29,6 +29,7 @@ This handbook is a modular reference. Read sections independently based on your 
 - **Section 10:** Recipes (how to use what you grow)
 - **Section 11:** Yearly cycle (month-by-month checklist)
 - **Section 12:** Emergency mode (low-input survival)
+- **Section 13:** Planting grid (spatial planning tool)
 
 ## How to Read
 
@@ -64,6 +65,9 @@ This handbook is a modular reference. Read sections independently based on your 
 
 **Emergency situations:**
 - Read Section 12 (low-input mode)
+
+**Planning plant placement:**
+- Read Section 13 (planting grid)
 
 ## Format Conventions
 
@@ -3799,6 +3803,237 @@ Survival priorities. What to focus on when resources are limited.
 **END OF HANDBOOK**
 
 *This handbook provides a complete framework for vegan self-sufficiency gardening in Serbia/Vojvodina. All plant entries in Section 5 follow the established 9-subsection template. Refer to Section 0 for navigation guidance.*
+
+---
+
+# SECTION 13 — PLANTING GRID & SPATIAL PLANNING
+
+## Goal
+
+Prevent incompatible plant placements. Find valid spots for new plantings without creating bad neighbor conflicts.
+
+## 13.1 Grid System Overview
+
+### Grid Specifications
+
+- **Dimensions:** 100 columns × 30 rows = 3000 cells
+- **Cell size:** Each cell = 1 m²
+- **Total area:** 3000 m² (matches handbook's 2500-3000 m² range)
+- **Adjacency:** 8-directional (orthogonal + diagonal neighbors)
+- **Format:** Numbers represent plants (see plant numbering reference)
+
+### Why Use the Grid
+
+- **Prevent conflicts:** Avoid placing incompatible plants adjacent
+- **Quick planning:** Find valid spots for new plantings mid-season
+- **Visual layout:** See entire garden space at once
+- **Succession planning:** Plan multi-season plantings in same cells
+
+## 13.2 Plant Numbering System
+
+Each plant has been assigned a number. Use these numbers in grid cells.
+
+**Key plants:**
+- 1. Tomato
+- 2. Pepper
+- 3. Bean
+- 4. Pea
+- 5. Cabbage
+- 6. Carrot
+- 7. Onion
+- 8. Potato
+- 9. Corn
+- 10. Squash
+- 11. Cucumber
+- 12. Lettuce
+- 13. Radish
+- 14. Spinach
+- 15. Kale
+- 16. Beet
+- 17. Garlic
+- 18. Basil
+- 19. Marigold
+- 20. Nasturtium
+
+**See `plant_numbers.md` for complete list of all 104 plants.**
+
+## 13.3 Multi-Season Notation
+
+Use semicolon to indicate succession planting in same cell:
+
+- `1;5` = Plant 1 (Tomato) in first season, then Plant 5 (Cabbage) in second season
+- `21;29` = Plant 21 (Lentil) in spring, then Plant 29 (Wheat) in fall
+- `4;12` = Plant 4 (Pea) in spring, then Plant 12 (Lettuce) in fall
+
+**Order matters:** First number = first season, second number = second season.
+
+## 13.4 Adjacency Rules
+
+### 8-Directional Adjacency
+
+Each cell checks 8 neighboring cells:
+- Up, Down, Left, Right (orthogonal)
+- Top-left, Top-right, Bottom-left, Bottom-right (diagonal)
+
+### Validation Logic
+
+**Cannot place plant if:**
+- Any adjacent cell contains an incompatible plant (see companion rules)
+
+**Can place plant if:**
+- Cell is empty
+- All adjacent cells are empty OR contain compatible plants
+
+**Example:**
+- Cell has Tomato (1) → Cannot place Potato (8) in adjacent cells
+- Cell has Bean (3) → Cannot place Onion (7) or Garlic (17) in adjacent cells
+- Cell has Carrot (6) → Cannot place Dill (64) or Fennel (66) in adjacent cells
+
+## 13.5 Space Requirements
+
+### Calculating Cells Needed
+
+**From Section 1 (Seed amounts) and Section 5 (Yields):**
+
+1. **Determine total m² needed:**
+   - Seed amount per year (Section 1)
+   - Expected yield per m² (Section 5)
+   - Calculate: Total m² = (Annual need / Yield per m²)
+
+2. **Account for spacing:**
+   - Row spacing × plant spacing = area per plant
+   - Plants per m² = 1 m² / area per plant
+   - Adjust for actual planting density
+
+3. **Plant type considerations:**
+   - **Trees:** 4-16 m² (2×2 to 4×4 cells) - leave buffer cells
+   - **Shrubs:** 1-4 m² (1×1 to 2×2 cells)
+   - **Large vegetables:** 0.5-1 m² per plant
+   - **Small vegetables/herbs:** Multiple plants per m²
+
+### Example Calculations
+
+**Potato:**
+- Seed: 15 kg seed potatoes
+- Spacing: 30 cm × 75 cm = 0.225 m² per plant
+- Yield: 3-5 kg per m²
+- Need: ~100-150 m² (100-150 cells)
+
+**Tomato:**
+- Seed: 5 g
+- Spacing: 60-90 cm × 90 cm = ~0.5-0.8 m² per plant
+- Yield: 5-10 kg per m²
+- Need: ~20-40 m² (20-40 cells)
+
+**Wheat:**
+- Seed: 2.5 kg
+- Spacing: Broadcast or rows 15-20 cm apart
+- Yield: 500-800 g per m²
+- Need: ~300-500 m² (300-500 cells)
+
+## 13.6 Using the Grid
+
+### Interactive Tool (grid.html)
+
+1. **Open `grid.html` in web browser**
+2. **Select plant** from dropdown
+3. **Choose mode:**
+   - **Place Plant:** Click cell to place selected plant
+   - **Check Valid Spots:** Highlights all valid placement locations
+   - **Remove Plant:** Click cell to remove plant
+4. **Visual feedback:**
+   - Green = Valid placement
+   - Red = Invalid (conflict with adjacent)
+   - Blue = Has plant
+   - Gray = Empty
+
+### CSV Template (grid_template.csv)
+
+1. **Open `grid_template.csv` in spreadsheet**
+2. **Enter plant numbers** in cells
+3. **Use semicolon** for multi-season (e.g., "1;5")
+4. **Leave empty** for paths, buffers, unused space
+5. **Validate manually** using companion rules
+
+### Validation Checklist
+
+Before placing a plant, check:
+- [ ] Cell is empty (or planning succession)
+- [ ] No incompatible plants in 8 adjacent cells
+- [ ] Enough space for plant's requirements
+- [ ] Compatible with plants in adjacent cells
+
+## 13.7 Common Incompatible Pairs
+
+**Critical conflicts to avoid:**
+- Tomato ↔ Potato, Fennel, Corn
+- Bean/Pea ↔ Onion, Garlic
+- Potato ↔ Tomato, Squash, Cucumber
+- Carrot ↔ Dill, Fennel
+- Cabbage ↔ Tomato, Strawberry
+- Corn ↔ Tomato
+- Squash ↔ Potato
+- Cucumber ↔ Potato
+
+**See Section 4.6 Companion Planting Matrix for complete list.**
+
+## 13.8 Grid Layout Tips
+
+### Zoning
+
+- **North edge:** Trees (permanent, large cells)
+- **Mid-perimeter:** Shrubs (permanent, medium cells)
+- **Central area:** Annuals (rotating, flexible)
+
+### Paths and Buffers
+
+- Leave empty cells for paths (0.5-1 m wide = 1-2 cells)
+- Leave buffer cells between incompatible zones
+- Use empty cells to separate conflicting plant groups
+
+### Succession Planning
+
+- Plan spring → fall successions in same cells
+- Use semicolon notation: `4;12` (Pea then Lettuce)
+- Check both seasons for compatibility
+
+### Example Layout Pattern
+
+```
+Row 1:  [Tree] [Empty] [Tree] [Empty] [Tree] ...
+Row 2:  [Empty] [Shrub] [Empty] [Shrub] [Empty] ...
+Row 3:  [1] [18] [1] [18] [1] ... (Tomato, Basil)
+Row 4:  [6] [7] [6] [7] [6] ... (Carrot, Onion)
+```
+
+## 13.9 Files and Resources
+
+- **grid.html** - Interactive visual grid tool
+- **grid_template.csv** - Empty grid template (100×30)
+- **companion_rules.json** - Complete companion planting rules
+- **plant_numbers.md** - Full plant numbering reference
+
+## 13.10 Quick Reference
+
+**To find valid spot for new plant:**
+1. Open grid.html
+2. Select plant number
+3. Choose "Check Valid Spots" mode
+4. Green cells = safe to plant
+5. Red cells = conflicts with adjacent plants
+
+**To plan succession:**
+1. Identify empty cells after harvest
+2. Check what was planted there (if any)
+3. Select new plant for next season
+4. Use semicolon notation: `old;new`
+5. Validate both plants are compatible with neighbors
+
+**To avoid conflicts:**
+- Always check 8 adjacent cells before placing
+- Refer to companion_rules.json for incompatibilities
+- Leave buffer cells between incompatible zones
+- Use empty cells strategically
 
 ---
 

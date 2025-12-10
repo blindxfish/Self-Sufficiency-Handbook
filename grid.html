@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Planting Grid - Spatial Planning Tool</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #2c5530;
+            margin-bottom: 10px;
+        }
+        
+        .info {
+            background: #e8f5e9;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            border-left: 4px solid #4a7c59;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        label {
+            font-weight: 600;
+            color: #333;
+            font-size: 0.9em;
+        }
+        
+        select, input, button {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        button {
+            background: #4a7c59;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        
+        button:hover {
+            background: #3d6b47;
+        }
+        
+        button.secondary {
+            background: #666;
+        }
+        
+        button.secondary:hover {
+            background: #555;
+        }
+        
+        .grid-container {
+            overflow-x: auto;
+            margin: 20px 0;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        .grid {
+            display: inline-block;
+            border-collapse: collapse;
+            font-size: 10px;
+        }
+        
+        .grid-cell {
+            width: 25px;
+            height: 25px;
+            border: 1px solid #ccc;
+            text-align: center;
+            vertical-align: middle;
+            cursor: pointer;
+            position: relative;
+            background: white;
+            font-weight: 600;
+        }
+        
+        .grid-cell:hover {
+            border: 2px solid #4a7c59;
+            z-index: 10;
+        }
+        
+        .grid-cell.empty {
+            background: #f9f9f9;
+        }
+        
+        .grid-cell.selected {
+            border: 2px solid #ff6b6b;
+            background: #ffe0e0;
+        }
+        
+        .grid-cell.valid {
+            background: #d4edda;
+        }
+        
+        .grid-cell.invalid {
+            background: #f8d7da;
+            border-color: #dc3545;
+        }
+        
+        .grid-cell.has-plant {
+            background: #e3f2fd;
+        }
+        
+        .row-label {
+            background: #f0f0f0;
+            font-weight: bold;
+            text-align: center;
+            padding: 2px 5px;
+            border: 1px solid #ccc;
+            min-width: 30px;
+        }
+        
+        .col-label {
+            background: #f0f0f0;
+            font-weight: bold;
+            text-align: center;
+            padding: 2px 5px;
+            border: 1px solid #ccc;
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            height: 25px;
+        }
+        
+        .legend {
+            display: flex;
+            gap: 20px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+        }
+        
+        .status {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+        
+        .status.valid {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status.invalid {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .plant-list {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px;
+            margin-top: 10px;
+        }
+        
+        .plant-item {
+            padding: 5px;
+            cursor: pointer;
+            border-radius: 3px;
+        }
+        
+        .plant-item:hover {
+            background: #f0f0f0;
+        }
+        
+        .plant-item.selected {
+            background: #e3f2fd;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Planting Grid - Spatial Planning Tool</h1>
+        <div class="info">
+            <strong>Grid Size:</strong> 100 columns × 30 rows = 3000 cells (3000 m² total)<br>
+            <strong>Each cell:</strong> 1 m²<br>
+            <strong>Adjacency:</strong> 8-directional (orthogonal + diagonal)<br>
+            <strong>Multi-season:</strong> Use semicolon (e.g., "1;5" for succession planting)
+        </div>
+        
+        <div class="controls">
+            <div class="control-group">
+                <label>Select Plant to Place:</label>
+                <select id="plantSelect">
+                    <option value="">-- Select Plant --</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label>Mode:</label>
+                <select id="modeSelect">
+                    <option value="place">Place Plant</option>
+                    <option value="check">Check Valid Spots</option>
+                    <option value="remove">Remove Plant</option>
+                </select>
+            </div>
+            <button onclick="clearGrid()">Clear Grid</button>
+            <button onclick="exportGrid()" class="secondary">Export CSV</button>
+            <button onclick="importGrid()" class="secondary">Import CSV</button>
+        </div>
+        
+        <div id="status" class="status" style="display:none;"></div>
+        
+        <div class="grid-container">
+            <table class="grid" id="gridTable"></table>
+        </div>
+        
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color" style="background: #f9f9f9;"></div>
+                <span>Empty</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #e3f2fd;"></div>
+                <span>Has Plant</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #d4edda;"></div>
+                <span>Valid Placement</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #f8d7da;"></div>
+                <span>Invalid (Conflict)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #ffe0e0;"></div>
+                <span>Selected</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const GRID_ROWS = 30;
+        const GRID_COLS = 100;
+        let grid = Array(GRID_ROWS).fill(null).map(() => Array(GRID_COLS).fill(''));
+        let selectedPlant = '';
+        let mode = 'place';
+        let selectedCell = null;
+        
+        // Load companion rules
+        let companionRules = {};
+        
+        async function loadCompanionRules() {
+            try {
+                const response = await fetch('companion_rules.json');
+                const data = await response.json();
+                companionRules = data.incompatibility_matrix;
+                
+                // Populate plant select
+                const select = document.getElementById('plantSelect');
+                Object.entries(data.plants).forEach(([num, plant]) => {
+                    const option = document.createElement('option');
+                    option.value = num;
+                    option.textContent = `${num}. ${plant.name}`;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error loading companion rules:', error);
+                // Fallback: create basic structure
+                companionRules = {};
+            }
+        }
+        
+        function initGrid() {
+            const table = document.getElementById('gridTable');
+            table.innerHTML = '';
+            
+            // Create header row with column labels
+            let headerRow = document.createElement('tr');
+            let cornerCell = document.createElement('td');
+            cornerCell.className = 'row-label';
+            cornerCell.textContent = '';
+            headerRow.appendChild(cornerCell);
+            
+            for (let col = 1; col <= GRID_COLS; col++) {
+                let cell = document.createElement('td');
+                cell.className = 'col-label';
+                cell.textContent = col;
+                headerRow.appendChild(cell);
+            }
+            table.appendChild(headerRow);
+            
+            // Create grid rows
+            for (let row = 0; row < GRID_ROWS; row++) {
+                let tr = document.createElement('tr');
+                
+                // Row label
+                let rowLabel = document.createElement('td');
+                rowLabel.className = 'row-label';
+                rowLabel.textContent = row + 1;
+                tr.appendChild(rowLabel);
+                
+                // Grid cells
+                for (let col = 0; col < GRID_COLS; col++) {
+                    let cell = document.createElement('td');
+                    cell.className = 'grid-cell empty';
+                    cell.dataset.row = row;
+                    cell.dataset.col = col;
+                    cell.textContent = grid[row][col] || '';
+                    cell.onclick = () => handleCellClick(row, col);
+                    cell.onmouseenter = () => handleCellHover(row, col);
+                    tr.appendChild(cell);
+                }
+                table.appendChild(tr);
+            }
+        }
+        
+        function getAdjacentCells(row, col) {
+            const adjacent = [];
+            const directions = [
+                [-1, -1], [-1, 0], [-1, 1],
+                [0, -1],           [0, 1],
+                [1, -1],  [1, 0],  [1, 1]
+            ];
+            
+            for (let [dr, dc] of directions) {
+                const newRow = row + dr;
+                const newCol = col + dc;
+                if (newRow >= 0 && newRow < GRID_ROWS && newCol >= 0 && newCol < GRID_COLS) {
+                    adjacent.push({row: newRow, col: newCol, value: grid[newRow][newCol]});
+                }
+            }
+            return adjacent;
+        }
+        
+        function getPlantNameFromNumber(num) {
+            // Extract first number if semicolon notation
+            const plantNum = num.split(';')[0];
+            const select = document.getElementById('plantSelect');
+            for (let option of select.options) {
+                if (option.value === plantNum) {
+                    return option.textContent.split('. ')[1];
+                }
+            }
+            return null;
+        }
+        
+        function checkCompatibility(plant1, plant2) {
+            if (!plant1 || !plant2) return true; // Empty is always compatible
+            if (plant1 === plant2) return true; // Same plant is compatible
+            
+            const name1 = getPlantNameFromNumber(plant1);
+            const name2 = getPlantNameFromNumber(plant2);
+            
+            if (!name1 || !name2) return true;
+            
+            // Check if plant1 avoids plant2
+            if (companionRules[name1] && companionRules[name1].includes(name2)) {
+                return false;
+            }
+            
+            // Check if plant2 avoids plant1
+            if (companionRules[name2] && companionRules[name2].includes(name1)) {
+                return false;
+            }
+            
+            return true;
+        }
+        
+        function isValidPlacement(row, col, plantNum) {
+            if (!plantNum) return true; // Removing is always valid
+            
+            const adjacent = getAdjacentCells(row, col);
+            
+            for (let adj of adjacent) {
+                if (adj.value && !checkCompatibility(plantNum, adj.value)) {
+                    return false;
+                }
+            }
+            
+            return true;
+        }
+        
+        function handleCellClick(row, col) {
+            const cell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+            
+            if (mode === 'place' && selectedPlant) {
+                if (isValidPlacement(row, col, selectedPlant)) {
+                    grid[row][col] = selectedPlant;
+                    updateCellDisplay(row, col);
+                    showStatus(`Placed ${document.getElementById('plantSelect').selectedOptions[0].textContent} at row ${row+1}, col ${col+1}`, 'valid');
+                } else {
+                    showStatus('Cannot place here - incompatible with adjacent plants!', 'invalid');
+                }
+            } else if (mode === 'remove') {
+                grid[row][col] = '';
+                updateCellDisplay(row, col);
+                showStatus(`Removed plant from row ${row+1}, col ${col+1}`, 'valid');
+            } else if (mode === 'check') {
+                if (selectedPlant) {
+                    if (isValidPlacement(row, col, selectedPlant)) {
+                        showStatus(`Valid placement for ${document.getElementById('plantSelect').selectedOptions[0].textContent}`, 'valid');
+                    } else {
+                        showStatus('Invalid placement - conflicts with adjacent plants', 'invalid');
+                    }
+                }
+            }
+        }
+        
+        function handleCellHover(row, col) {
+            if (mode === 'check' && selectedPlant) {
+                clearHighlights();
+                highlightValidSpots(selectedPlant);
+                const cell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+                if (cell) {
+                    cell.classList.add('selected');
+                }
+            }
+        }
+        
+        function highlightValidSpots(plantNum) {
+            for (let row = 0; row < GRID_ROWS; row++) {
+                for (let col = 0; col < GRID_COLS; col++) {
+                    const cell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+                    if (!grid[row][col]) { // Only highlight empty cells
+                        if (isValidPlacement(row, col, plantNum)) {
+                            cell.classList.add('valid');
+                        } else {
+                            cell.classList.add('invalid');
+                        }
+                    }
+                }
+            }
+        }
+        
+        function clearHighlights() {
+            document.querySelectorAll('.grid-cell').forEach(cell => {
+                cell.classList.remove('valid', 'invalid', 'selected');
+            });
+        }
+        
+        function updateCellDisplay(row, col) {
+            const cell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+            const value = grid[row][col];
+            
+            cell.textContent = value || '';
+            cell.className = 'grid-cell';
+            
+            if (value) {
+                cell.classList.add('has-plant');
+            } else {
+                cell.classList.add('empty');
+            }
+        }
+        
+        function updateAllCells() {
+            for (let row = 0; row < GRID_ROWS; row++) {
+                for (let col = 0; col < GRID_COLS; col++) {
+                    updateCellDisplay(row, col);
+                }
+            }
+        }
+        
+        function showStatus(message, type) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = `status ${type}`;
+            status.style.display = 'block';
+            setTimeout(() => {
+                status.style.display = 'none';
+            }, 3000);
+        }
+        
+        function clearGrid() {
+            if (confirm('Clear entire grid?')) {
+                grid = Array(GRID_ROWS).fill(null).map(() => Array(GRID_COLS).fill(''));
+                updateAllCells();
+                clearHighlights();
+                showStatus('Grid cleared', 'valid');
+            }
+        }
+        
+        function exportGrid() {
+            let csv = 'Row';
+            for (let col = 1; col <= GRID_COLS; col++) {
+                csv += `,${col}`;
+            }
+            csv += '\n';
+            
+            for (let row = 0; row < GRID_ROWS; row++) {
+                csv += `${row + 1}`;
+                for (let col = 0; col < GRID_COLS; col++) {
+                    csv += `,${grid[row][col] || ''}`;
+                }
+                csv += '\n';
+            }
+            
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'planting_grid.csv';
+            a.click();
+            window.URL.revokeObjectURL(url);
+            showStatus('Grid exported to planting_grid.csv', 'valid');
+        }
+        
+        function importGrid() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.csv';
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        const text = event.target.result;
+                        const lines = text.split('\n').filter(line => line.trim());
+                        
+                        // Skip header
+                        for (let i = 1; i < lines.length && i <= GRID_ROWS + 1; i++) {
+                            const values = lines[i].split(',');
+                            const row = parseInt(values[0]) - 1;
+                            if (row >= 0 && row < GRID_ROWS) {
+                                for (let col = 1; col < values.length && col <= GRID_COLS; col++) {
+                                    grid[row][col - 1] = values[col] || '';
+                                }
+                            }
+                        }
+                        updateAllCells();
+                        showStatus('Grid imported successfully', 'valid');
+                    };
+                    reader.readAsText(file);
+                }
+            };
+            input.click();
+        }
+        
+        // Event listeners
+        document.getElementById('plantSelect').addEventListener('change', (e) => {
+            selectedPlant = e.target.value;
+            clearHighlights();
+            if (mode === 'check' && selectedPlant) {
+                highlightValidSpots(selectedPlant);
+            }
+        });
+        
+        document.getElementById('modeSelect').addEventListener('change', (e) => {
+            mode = e.target.value;
+            clearHighlights();
+            if (mode === 'check' && selectedPlant) {
+                highlightValidSpots(selectedPlant);
+            }
+        });
+        
+        // Initialize
+        loadCompanionRules().then(() => {
+            initGrid();
+        });
+    </script>
+</body>
+</html>
+
