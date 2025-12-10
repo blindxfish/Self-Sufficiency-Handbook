@@ -129,6 +129,12 @@
             background: #d4edda;
         }
         
+        .grid-cell.beneficial {
+            background: #c3e6cb;
+            border: 2px solid #28a745;
+            font-weight: bold;
+        }
+        
         .grid-cell.invalid {
             background: #f8d7da;
             border-color: #dc3545;
@@ -270,6 +276,10 @@
                 <span>Valid Placement</span>
             </div>
             <div class="legend-item">
+                <div class="legend-color" style="background: #c3e6cb; border: 2px solid #28a745;"></div>
+                <span>Beneficial Neighbors</span>
+            </div>
+            <div class="legend-item">
                 <div class="legend-color" style="background: #f8d7da;"></div>
                 <span>Invalid (Conflict)</span>
             </div>
@@ -321,6 +331,7 @@
                 const response = await fetch('companion_rules.json');
                 const data = await response.json();
                 companionRules = data.incompatibility_matrix;
+                plantData = data.plants; // Store full plant data for beneficial checks
                 
                 // Populate plant select
                 const select = document.getElementById('plantSelect');
@@ -432,50 +443,78 @@
             return null;
         }
         
+        let plantData = {}; // Store full plant data including compatible list
+        
         function checkCompatibility(plant1, plant2) {
-            if (!plant1 || !plant2) return true; // Empty is always compatible
-            if (plant1 === plant2) return true; // Same plant is compatible
+            if (!plant1 || !plant2) return {compatible: true, beneficial: false}; // Empty is always compatible
+            if (plant1 === plant2) return {compatible: true, beneficial: false}; // Same plant is compatible
             
             const name1 = getPlantNameFromNumber(plant1);
             const name2 = getPlantNameFromNumber(plant2);
             
-            if (!name1 || !name2) return true;
+            if (!name1 || !name2) return {compatible: true, beneficial: false};
             
             // Check if plant1 avoids plant2
             if (companionRules[name1] && companionRules[name1].includes(name2)) {
-                return false;
+                return {compatible: false, beneficial: false};
             }
             
             // Check if plant2 avoids plant1
             if (companionRules[name2] && companionRules[name2].includes(name1)) {
-                return false;
+                return {compatible: false, beneficial: false};
             }
             
-            return true;
+            // Check if they're beneficial companions
+            const plant1Data = plantData[plant1.split(';')[0]];
+            const plant2Data = plantData[plant2.split(';')[0]];
+            
+            let beneficial = false;
+            if (plant1Data && plant1Data.compatible) {
+                beneficial = plant1Data.compatible.includes(name2);
+            }
+            if (!beneficial && plant2Data && plant2Data.compatible) {
+                beneficial = plant2Data.compatible.includes(name1);
+            }
+            
+            return {compatible: true, beneficial: beneficial};
         }
         
         function isValidPlacement(row, col, plantNum) {
-            if (!plantNum) return true; // Removing is always valid
+            if (!plantNum) return {valid: true, beneficial: false}; // Removing is always valid
             
             const adjacent = getAdjacentCells(row, col);
+            let hasBeneficial = false;
+            let beneficialCount = 0;
             
             for (let adj of adjacent) {
-                if (adj.value && !checkCompatibility(plantNum, adj.value)) {
-                    return false;
+                if (adj.value) {
+                    const compat = checkCompatibility(plantNum, adj.value);
+                    if (!compat.compatible) {
+                        return {valid: false, beneficial: false};
+                    }
+                    if (compat.beneficial) {
+                        hasBeneficial = true;
+                        beneficialCount++;
+                    }
                 }
             }
             
-            return true;
+            return {valid: true, beneficial: hasBeneficial, beneficialCount: beneficialCount};
         }
         
         function handleCellClick(row, col) {
             const cell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
             
             if (mode === 'place' && selectedPlant) {
-                if (isValidPlacement(row, col, selectedPlant)) {
+                const placement = isValidPlacement(row, col, selectedPlant);
+                if (placement.valid) {
                     grid[row][col] = selectedPlant;
                     updateCellDisplay(row, col);
-                    showStatus(`Placed ${document.getElementById('plantSelect').selectedOptions[0].textContent} at row ${row+1}, col ${col+1}`, 'valid');
+                    let message = `Placed ${document.getElementById('plantSelect').selectedOptions[0].textContent} at row ${row+1}, col ${col+1}`;
+                    if (placement.beneficial) {
+                        message += ` (${placement.beneficialCount} beneficial neighbor${placement.beneficialCount > 1 ? 's' : ''})`;
+                    }
+                    showStatus(message, 'valid');
                 } else {
                     showStatus('Cannot place here - incompatible with adjacent plants!', 'invalid');
                 }
@@ -485,8 +524,13 @@
                 showStatus(`Removed plant from row ${row+1}, col ${col+1}`, 'valid');
             } else if (mode === 'check') {
                 if (selectedPlant) {
-                    if (isValidPlacement(row, col, selectedPlant)) {
-                        showStatus(`Valid placement for ${document.getElementById('plantSelect').selectedOptions[0].textContent}`, 'valid');
+                    const placement = isValidPlacement(row, col, selectedPlant);
+                    if (placement.valid) {
+                        let message = `Valid placement for ${document.getElementById('plantSelect').selectedOptions[0].textContent}`;
+                        if (placement.beneficial) {
+                            message += ` - ${placement.beneficialCount} beneficial neighbor${placement.beneficialCount > 1 ? 's' : ''} nearby!`;
+                        }
+                        showStatus(message, 'valid');
                     } else {
                         showStatus('Invalid placement - conflicts with adjacent plants', 'invalid');
                     }
@@ -510,10 +554,20 @@
                 for (let col = 0; col < GRID_COLS; col++) {
                     const cell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
                     if (!grid[row][col]) { // Only highlight empty cells
-                        if (isValidPlacement(row, col, plantNum)) {
-                            cell.classList.add('valid');
+                        const placement = isValidPlacement(row, col, plantNum);
+                        if (placement.valid) {
+                            if (placement.beneficial) {
+                                cell.classList.add('valid');
+                                cell.classList.add('beneficial'); // Add special class for beneficial
+                                // Add title to show beneficial count
+                                cell.title = `Valid placement with ${placement.beneficialCount} beneficial neighbor(s)`;
+                            } else {
+                                cell.classList.add('valid');
+                                cell.title = 'Valid placement';
+                            }
                         } else {
                             cell.classList.add('invalid');
+                            cell.title = 'Invalid - conflicts with adjacent plants';
                         }
                     }
                 }
@@ -522,7 +576,8 @@
         
         function clearHighlights() {
             document.querySelectorAll('.grid-cell').forEach(cell => {
-                cell.classList.remove('valid', 'invalid', 'selected');
+                cell.classList.remove('valid', 'invalid', 'selected', 'beneficial');
+                cell.title = ''; // Clear tooltips
             });
         }
         
